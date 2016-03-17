@@ -173,7 +173,7 @@ static NSString *const FICImageCacheEntityKey = @"FICImageCacheEntityKey";
             UIImage *image = [imageTable newImageForEntityUUID:entityUUID sourceImageUUID:sourceImageUUID preheatData:YES];
             
             if (completionBlock != nil) {
-                dispatch_async(dispatch_get_main_queue(), ^{
+                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                     completionBlock(entity, formatName, image);
                 });
             }
@@ -187,7 +187,7 @@ static NSString *const FICImageCacheEntityKey = @"FICImageCacheEntityKey";
                 if (loadSynchronously) {
                     completionBlock(entity, formatName, image);
                 } else {
-                    dispatch_async(dispatch_get_main_queue(), ^{
+                    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                         completionBlock(entity, formatName, image);
                     });
                 }
@@ -260,11 +260,9 @@ static NSString *const FICImageCacheEntityKey = @"FICImageCacheEntityKey";
             } else {
                 NSArray *completionBlocks = [completionBlocksDictionary objectForKey:formatName];
                 if (completionBlocks != nil) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        for (FICImageCacheCompletionBlock completionBlock in completionBlocks) {
-                            completionBlock(entity, formatName, nil);
-                        }
-                    });
+                    for (FICImageCacheCompletionBlock completionBlock in completionBlocks) {
+                        completionBlock(entity, formatName, nil);
+                    }
                 }
             }
         }
@@ -358,12 +356,10 @@ static void _FICAddCompletionBlockForEntity(NSString *formatName, NSMutableDicti
             UIImage *resultImage = [imageTable newImageForEntityUUID:entityUUID sourceImageUUID:sourceImageUUID preheatData:NO];
             
             if (completionBlocks != nil) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    NSString *formatName = [[imageTable imageFormat] name];
-                    for (FICImageCacheCompletionBlock completionBlock in completionBlocks) {
-                        completionBlock(entity, formatName, resultImage);
-                    }
-                });
+                NSString *formatName = [[imageTable imageFormat] name];
+                for (FICImageCacheCompletionBlock completionBlock in completionBlocks) {
+                    completionBlock(entity, formatName, resultImage);
+                }
             }
         });
     }
