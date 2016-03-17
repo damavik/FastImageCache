@@ -150,11 +150,36 @@ static NSString *const FICImageCacheEntityKey = @"FICImageCacheEntityKey";
 #pragma mark - Retrieving Images
 
 - (BOOL)retrieveImageForEntity:(id <FICEntity>)entity withFormatName:(NSString *)formatName completionBlock:(FICImageCacheCompletionBlock)completionBlock {
-    return [self _retrieveImageForEntity:entity withFormatName:formatName loadSynchronously:YES completionBlock:completionBlock];
+    return [self _retrieveImageForEntity:entity
+                          withFormatName:formatName
+                       loadSynchronously:YES
+                         completionBlock:^(id<FICEntity> entity, NSString *formatName, UIImage *image) {
+                             if (completionBlock) {
+                                 completionBlock(entity, formatName, [self _forceImageDecompression:image]);
+                             }
+    }];
 }
 
 - (BOOL)asynchronouslyRetrieveImageForEntity:(id <FICEntity>)entity withFormatName:(NSString *)formatName completionBlock:(FICImageCacheCompletionBlock)completionBlock {
-    return [self _retrieveImageForEntity:entity withFormatName:formatName loadSynchronously:NO completionBlock:completionBlock];
+    return [self _retrieveImageForEntity:entity
+                          withFormatName:formatName
+                       loadSynchronously:NO
+                         completionBlock:^(id<FICEntity> entity, NSString *formatName, UIImage *image) {
+                             if (completionBlock) {
+                                 completionBlock(entity, formatName, [self _forceImageDecompression:image]);
+                             }
+                         }];
+}
+
+- (UIImage *)_forceImageDecompression:(UIImage *)image {
+    // Force UIImage decompression before calling back
+    UIGraphicsBeginImageContextWithOptions(image.size, NO, 0);
+    [image drawAtPoint:CGPointZero];
+    image = UIGraphicsGetImageFromCurrentImageContext();
+    
+    UIGraphicsEndImageContext();
+    
+    return image;
 }
 
 - (BOOL)_retrieveImageForEntity:(id <FICEntity>)entity withFormatName:(NSString *)formatName loadSynchronously:(BOOL)loadSynchronously completionBlock:(FICImageCacheCompletionBlock)completionBlock {
